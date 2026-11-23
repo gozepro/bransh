@@ -174,6 +174,7 @@ export default function ReportDetail({ id, userId, role, onBack, onNeedAuth }) {
       <p className="eyebrow">
         {report.category_label} · {report.place_name}
       </p>
+      {report.is_demo && <span className="badge amber">Exemple de démonstration</span>}
       <h1 className="detail-title">{report.title}</h1>
 
       <div className={`statusbox ${tone}`}>

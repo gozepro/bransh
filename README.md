@@ -8,7 +8,8 @@
 
 ## Fonctionnalités actuelles
 
-- Fil d'actualité géolocalisé et carte des signalements, avec filtres par catégorie
+- Fil d'actualité géolocalisé et carte interactive (chaleur, regroupement, points animés), avec filtres par catégorie
+- Thème clair et sombre
 - Formulaire de signalement guidé (titre, faits, catégorie, lieu, photo facultative)
 - Photos compressées dans le navigateur, avec suppression des métadonnées (EXIF/GPS) et choix du cadrage
 - Statuts de vérification (non vérifiée, en vérification, corroborée, confirmée, contestée, démentie, expirée)
@@ -23,7 +24,7 @@ Les idées et contributions sont les bienvenues.
 
 ## Pile technique
 
-- **Frontend** : React + Vite, carte avec Leaflet / OpenStreetMap
+- **Frontend** : React + Vite, carte MapLibre GL (fonds OpenFreeMap, données OpenStreetMap)
 - **Backend** : [Supabase](https://supabase.com) (Postgres + PostGIS, authentification, stockage, règles de sécurité RLS)
 
 ## Lancer le projet en local
