@@ -1416,3 +1416,36 @@ h3.flush {
 .muted a {
   color: var(--orange);
 }
+
+/* ---------- Rejoindre, pied de fil ---------- */
+.join-card {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.join-card .secondary {
+  margin-top: 4px;
+}
+.join-card p {
+  margin: 4px 0 8px;
+}
+.join-emoji {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--tint-orange);
+  font-size: 22px;
+}
+.footer-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+.footer-card .secondary {
+  margin-top: 0;
+  flex: 1;
+}

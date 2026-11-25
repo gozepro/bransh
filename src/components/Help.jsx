@@ -8,6 +8,7 @@ const TOPICS = [
   { id: 'signalement', label: 'Un signalement' },
   { id: 'bug', label: 'Un problème technique' },
   { id: 'suggestion', label: 'Une suggestion' },
+  { id: 'benevole', label: 'Devenir bénévole ou partenaire' },
   { id: 'autre', label: 'Autre chose' },
 ]
 
@@ -30,9 +31,9 @@ const FAQ = [
   },
 ]
 
-export default function Help({ user, onBack }) {
-  const [topic, setTopic] = useState('compte')
-  const [message, setMessage] = useState('')
+export default function Help({ user, onBack, preset }) {
+  const [topic, setTopic] = useState(preset?.topic || 'compte')
+  const [message, setMessage] = useState(preset?.message || '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
   const [sent, setSent] = useState(false)

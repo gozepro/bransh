@@ -16,10 +16,12 @@
 - Boutons « Je confirme » / « Je conteste » et ajout de preuves
 - Rôles : citoyen, vérificateur, modérateur, administrateur, avec historique justifié de chaque changement de statut
 - Liens partageables (ex. WhatsApp) vers chaque signalement
+- Installation sur l'écran d'accueil (PWA) et dernier fil consultable hors-ligne
+- Profil, paramètres, notes et avis, aide et contact, gestion des rôles par les administrateurs
 
 ## Pistes à venir
 
-Score de confiance pondéré, notifications push, PWA hors-ligne, mode « low data », canal SMS/USSD, tableaux de bord pour ONG et collectivités, traduction (français, nouchi, anglais).
+Score de confiance pondéré, notifications push, cartes disponibles hors-ligne, mode « low data », canal SMS/USSD, tableaux de bord pour ONG et collectivités, traduction (français, nouchi, anglais).
 Les idées et contributions sont les bienvenues.
 
 ## Pile technique
@@ -66,7 +68,7 @@ supabase/
 
 ## Contribuer
 
-Les issues et pull requests sont bienvenues. Pour une grosse évolution, ouvre d'abord une issue pour en discuter.
+Tout le monde peut aider : code, design, vérification, relais dans les quartiers. Lis le [guide de contribution](CONTRIBUTING.md) et le [guide de marque](docs/marque.md). Pour une grosse évolution, ouvre d'abord une issue pour en discuter.
 
 ## Licence
 

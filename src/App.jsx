@@ -8,6 +8,8 @@ import Profile from './components/Profile'
 import Support from './components/Support'
 import Settings from './components/Settings'
 import Help from './components/Help'
+import Join from './components/Join'
+import { useInstall } from './lib/useInstall'
 import { CITIES } from './lib/cities'
 import { useCity } from './lib/useCity'
 
@@ -59,7 +61,7 @@ export default function App() {
   const [role, setRole] = useState('citizen')
   const [ready, setReady] = useState(false)
   const [detailId, setDetailId] = useState(parseHash)
-  const [view, setView] = useState(() => (parseHash() ? 'detail' : 'feed')) // 'feed' | 'map' | 'report' | 'auth' | 'detail' | 'profile' | 'support' | 'settings' | 'help'
+  const [view, setView] = useState(() => (parseHash() ? 'detail' : 'feed')) // 'feed' | 'map' | 'report' | 'auth' | 'detail' | 'profile' | 'support' | 'settings' | 'help' | 'join'
   const [afterAuth, setAfterAuth] = useState('feed')
   const [refreshKey, setRefreshKey] = useState(0)
   const [themePref, setThemePrefState] = useState(() => {
@@ -75,6 +77,8 @@ export default function App() {
   const [settingsSection, setSettingsSection] = useState(null)
   const contentRef = useRef(null)
   const { city, outside, detecting, choose, locate } = useCity()
+  const install = useInstall()
+  const [helpPreset, setHelpPreset] = useState(null)
 
   const setThemePref = (value) => {
     setThemePrefState(value)
@@ -194,9 +198,27 @@ export default function App() {
     clearHash()
   }
 
-  const goHelp = () => {
+  const goHelp = (preset = null) => {
+    // onClick transmet un événement : on ne garde que les vrais préréglages
+    setHelpPreset(preset && preset.topic ? preset : null)
     setView('help')
     clearHash()
+  }
+
+  const goJoin = () => {
+    setView('join')
+    clearHash()
+  }
+
+  // Candidature depuis « Rejoindre » : il faut un compte pour écrire à l'équipe
+  const apply = (preset) => {
+    if (session) {
+      goHelp(preset)
+    } else {
+      setHelpPreset(preset)
+      setAfterAuth('help')
+      setView('auth')
+    }
   }
 
   const goLogin = () => {
@@ -286,13 +308,17 @@ export default function App() {
                 <p className="hint">Bransh n'est pas encore active près de toi : voici {city.name}.</p>
               )}
               <Feed refreshKey={refreshKey} onOpen={openReport} city={city} />
-              <button className="card support-link" onClick={goSupport}>
-                <span>
-                  <strong>❤ Bransh est gratuite et open source</strong>
-                  <span className="muted"> · Soutenir le projet</span>
-                </span>
-                <span aria-hidden="true">→</span>
-              </button>
+              <div className="card footer-card">
+                <strong>Bransh est gratuite et open source</strong>
+                <div className="row">
+                  <button className="secondary" onClick={goSupport}>
+                    ❤ Soutenir
+                  </button>
+                  <button className="secondary" onClick={goJoin}>
+                    Rejoindre l'équipe
+                  </button>
+                </div>
+              </div>
             </>
           )}
 
@@ -319,13 +345,24 @@ export default function App() {
               detecting={detecting}
               onSupport={goSupport}
               onHelp={goHelp}
+              onJoin={goJoin}
+              install={install}
               onBack={() => (session ? setView('profile') : goFeed())}
               onLogout={logout}
               initialSection={settingsSection}
             />
           )}
 
-          {view === 'help' && <Help user={session?.user} onBack={() => (session ? setView('profile') : goFeed())} />}
+          {view === 'help' && (
+            <Help
+              key={helpPreset ? helpPreset.message : 'libre'}
+              user={session?.user}
+              preset={helpPreset}
+              onBack={() => (session ? setView('profile') : goFeed())}
+            />
+          )}
+
+          {view === 'join' && <Join onBack={goFeed} onApply={apply} onSupport={goSupport} />}
 
           {view === 'support' && <Support onBack={() => (session ? setView('profile') : goFeed())} />}
 
@@ -353,7 +390,9 @@ export default function App() {
                     ? 'Connecte-toi pour confirmer ou contester une information.'
                     : afterAuth === 'profile'
                       ? 'Connecte-toi pour accéder à ton profil.'
-                      : null
+                      : afterAuth === 'help'
+                        ? 'Connecte-toi pour écrire à l’équipe.'
+                        : null
               }
             />
           )}

@@ -4,15 +4,28 @@ import { STATUS, timeAgo } from '../lib/format'
 import { publicUrl } from '../lib/media'
 import { CITY_RADIUS_KM, distanceKm } from '../lib/cities'
 
+function readCache(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key))
+  } catch {
+    return null
+  }
+}
+
 export default function Feed({ refreshKey, onOpen, city }) {
   const [reports, setReports] = useState([])
   const [photos, setPhotos] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [offlineAt, setOfflineAt] = useState(null)
 
   useEffect(() => {
     let cancelled = false
+    const cacheKey = `bransh-feed-${city.id}`
     setLoading(true)
+    setOfflineAt(null)
+    setError(null)
+
     supabase
       .from('reports_feed')
       .select('*')
@@ -20,8 +33,17 @@ export default function Feed({ refreshKey, onOpen, city }) {
       .limit(150)
       .then(async ({ data, error }) => {
         if (cancelled) return
+
         if (error) {
-          setError(error.message)
+          // Pas de connexion : on affiche le dernier fil connu s'il existe
+          const cached = readCache(cacheKey)
+          if (cached && cached.reports) {
+            setReports(cached.reports)
+            setPhotos(cached.photos || {})
+            setOfflineAt(cached.at)
+          } else {
+            setError(error.message)
+          }
           setLoading(false)
           return
         }
@@ -32,6 +54,7 @@ export default function Feed({ refreshKey, onOpen, city }) {
           .slice(0, 50)
         setReports(nearby)
 
+        let first = {}
         if (nearby.length > 0) {
           const { data: media } = await supabase
             .from('report_media')
@@ -39,15 +62,21 @@ export default function Feed({ refreshKey, onOpen, city }) {
             .eq('kind', 'photo')
             .in('report_id', nearby.map((r) => r.id))
             .order('created_at')
-          if (!cancelled && media) {
-            const first = {}
+          if (media) {
             media.forEach((m) => {
               if (!first[m.report_id]) first[m.report_id] = m
             })
-            setPhotos(first)
           }
         }
+        if (cancelled) return
+        setPhotos(first)
         setLoading(false)
+
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify({ at: new Date().toISOString(), reports: nearby, photos: first }))
+        } catch {
+          /* stockage plein ou indisponible : pas de mode hors-ligne pour cette fois */
+        }
       })
     return () => {
       cancelled = true
@@ -65,6 +94,9 @@ export default function Feed({ refreshKey, onOpen, city }) {
 
   return (
     <section>
+      {offlineAt && (
+        <p className="notice">📡 Hors ligne · dernière mise à jour {timeAgo(offlineAt)}. Reconnecte-toi pour actualiser.</p>
+      )}
       <h3>À la une près de chez vous</h3>
       {reports.map((r) => {
         const [label, tone] = STATUS[r.status] || ['—', 'grey']

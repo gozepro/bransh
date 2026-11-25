@@ -10,3 +10,12 @@ createRoot(document.getElementById('root')).render(
     <App />
   </StrictMode>,
 )
+
+// Installation sur l'écran d'accueil et ouverture hors-ligne (uniquement dans la version publiée)
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      /* sans service worker, l'application fonctionne normalement */
+    })
+  })
+}

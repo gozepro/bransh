@@ -4,6 +4,7 @@ import { CITIES } from '../lib/cities'
 import { SUPPORT } from '../config/support'
 import { APP_VERSION } from '../config/app'
 import Privacy from './Privacy'
+import { shareApp } from '../lib/share'
 
 const THEMES = [
   { id: 'light', label: 'Clair' },
@@ -362,6 +363,44 @@ function FeedbackSection({ user, role, onBack }) {
   )
 }
 
+/* ---------------- Installer l'application ---------------- */
+function InstallSection({ install, onBack }) {
+  return (
+    <div>
+      <SectionHeader title="Installer Bransh" onBack={onBack} />
+      <div className="card">
+        <p>
+          Ajoute Bransh à ton écran d'accueil : elle s'ouvre comme une application, en plein écran, et le dernier fil
+          reste consultable même sans connexion.
+        </p>
+        {install.canInstall && (
+          <button className="primary" onClick={install.install}>
+            Installer l'application
+          </button>
+        )}
+        {install.showIosHelp && (
+          <ol className="help-list">
+            <li>
+              Ouvre Bransh dans <strong>Safari</strong>.
+            </li>
+            <li>
+              Touche le bouton <strong>Partager</strong> (le carré avec une flèche).
+            </li>
+            <li>
+              Choisis <strong>Sur l'écran d'accueil</strong>, puis <strong>Ajouter</strong>.
+            </li>
+          </ol>
+        )}
+        {!install.canInstall && !install.showIosHelp && (
+          <p className="muted">
+            Ouvre le menu de ton navigateur (⋮) et choisis « Installer l'application » ou « Ajouter à l'écran d'accueil ».
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 /* ---------------- À propos ---------------- */
 function AboutSection({ onBack, onSupport, onPrivacy }) {
   return (
@@ -390,6 +429,9 @@ function AboutSection({ onBack, onSupport, onPrivacy }) {
           </p>
         )}
       </div>
+      <button className="secondary full" onClick={shareApp}>
+        Partager Bransh
+      </button>
       <button className="card support-link" onClick={onSupport}>
         <span>
           <strong>❤ Soutenir Bransh</strong>
@@ -597,6 +639,7 @@ const TOPIC_LABELS = {
   bug: 'Problème technique',
   suggestion: 'Suggestion',
   autre: 'Autre',
+  benevole: 'Bénévolat / partenariat',
 }
 
 function InboxSection({ onBack }) {
@@ -683,6 +726,8 @@ export default function Settings({
   detecting,
   onSupport,
   onHelp,
+  onJoin,
+  install,
   onBack,
   onLogout,
   initialSection = null,
@@ -702,6 +747,7 @@ export default function Settings({
   if (section === 'feedback' && user) return <FeedbackSection user={user} role={role} onBack={backFromSection} />
   if (section === 'team' && user && isAdmin) return <TeamSection user={user} onBack={backFromSection} />
   if (section === 'inbox' && user && isAdmin) return <InboxSection onBack={backFromSection} />
+  if (section === 'install' && install) return <InstallSection install={install} onBack={backFromSection} />
   if (section === 'about')
     return <AboutSection onBack={backFromSection} onSupport={onSupport} onPrivacy={() => setSection('privacy')} />
   if (section === 'privacy')
@@ -750,6 +796,10 @@ export default function Settings({
         <Row title="Note et avis" hint="donne ton avis sur Bransh" showHint={hint} onClick={() => setSection('feedback')} />
       )}
 
+      {install && install.available && (
+        <Row title="Installer l'application" hint="l'ajouter à l'écran d'accueil" showHint={hint} onClick={() => setSection('install')} />
+      )}
+      <Row title="Rejoindre l'équipe" hint="vérificateur, relais, développeur, partenaire" showHint={hint} onClick={onJoin} />
       <Row title="Aide et contact" hint="écrire à l'équipe, questions fréquentes" showHint={hint} onClick={onHelp} />
       <Row title="À propos" hint="version, projet, contact" showHint={hint} onClick={() => setSection('about')} />
 
