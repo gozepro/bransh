@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-export default function AuthForm({ onDone, note }) {
+export default function AuthForm({ onDone, note, onPrivacy }) {
   const [mode, setMode] = useState('login') // 'login' | 'signup'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -78,6 +78,14 @@ export default function AuthForm({ onDone, note }) {
       >
         {mode === 'login' ? "Pas de compte ? S'inscrire" : 'Déjà un compte ? Se connecter'}
       </button>
+      {onPrivacy && (
+        <p className="hint center">
+          En créant un compte, tu acceptes que tes contributions soient publiques.{' '}
+          <button type="button" className="link small" onClick={onPrivacy}>
+            Politique de confidentialité
+          </button>
+        </p>
+      )}
     </div>
   )
 }

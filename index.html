@@ -9,12 +9,13 @@
     <meta name="description" content="Bransh : l'information au plus près de vous, vérifiée ensemble." />
     <title>Bransh</title>
     <script>
-      // Applique le thème (clair/sombre) avant l'affichage pour éviter un flash
+      // Applique le thème (clair, sombre ou automatique) avant l'affichage pour éviter un flash
       ;(function () {
         var theme = 'light'
         try {
-          theme = localStorage.getItem('bransh-theme')
-          if (!theme) theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+          var pref = localStorage.getItem('bransh-theme')
+          if (pref === 'light' || pref === 'dark') theme = pref
+          else theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
         } catch (e) {}
         document.documentElement.setAttribute('data-theme', theme)
         var meta = document.querySelector('meta[name="theme-color"]')

@@ -4,6 +4,10 @@ import AuthForm from './components/AuthForm'
 import ReportForm from './components/ReportForm'
 import Feed from './components/Feed'
 import ReportDetail from './components/ReportDetail'
+import Profile from './components/Profile'
+import Support from './components/Support'
+import Settings from './components/Settings'
+import Help from './components/Help'
 import { CITIES } from './lib/cities'
 import { useCity } from './lib/useCity'
 
@@ -31,6 +35,12 @@ const icons = {
       <path d="M12 5v14M5 12h14" />
     </svg>
   ),
+  user: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
+    </svg>
+  ),
   sun: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="12" r="4" />
@@ -49,25 +59,49 @@ export default function App() {
   const [role, setRole] = useState('citizen')
   const [ready, setReady] = useState(false)
   const [detailId, setDetailId] = useState(parseHash)
-  const [view, setView] = useState(() => (parseHash() ? 'detail' : 'feed')) // 'feed' | 'map' | 'report' | 'auth' | 'detail'
+  const [view, setView] = useState(() => (parseHash() ? 'detail' : 'feed')) // 'feed' | 'map' | 'report' | 'auth' | 'detail' | 'profile' | 'support' | 'settings' | 'help'
   const [afterAuth, setAfterAuth] = useState('feed')
   const [refreshKey, setRefreshKey] = useState(0)
-  const [theme, setTheme] = useState(() => document.documentElement.getAttribute('data-theme') || 'light')
+  const [themePref, setThemePrefState] = useState(() => {
+    try {
+      const v = localStorage.getItem('bransh-theme')
+      return v === 'light' || v === 'dark' ? v : 'auto'
+    } catch {
+      return 'auto'
+    }
+  })
+  const [systemDark, setSystemDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches)
+  const theme = themePref === 'auto' ? (systemDark ? 'dark' : 'light') : themePref
+  const [settingsSection, setSettingsSection] = useState(null)
   const contentRef = useRef(null)
   const { city, outside, detecting, choose, locate } = useCity()
 
-  const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark'
-    setTheme(next)
-    document.documentElement.setAttribute('data-theme', next)
-    const meta = document.querySelector('meta[name="theme-color"]')
-    if (meta) meta.setAttribute('content', next === 'dark' ? '#0d0e12' : '#faf7f2')
+  const setThemePref = (value) => {
+    setThemePrefState(value)
     try {
-      localStorage.setItem('bransh-theme', next)
+      if (value === 'auto') localStorage.removeItem('bransh-theme')
+      else localStorage.setItem('bransh-theme', value)
     } catch {
-      /* stockage indisponible : le thème ne sera simplement pas mémorisé */
+      /* stockage indisponible : le choix ne sera simplement pas mémorisé */
     }
   }
+
+  const toggleTheme = () => setThemePref(theme === 'dark' ? 'light' : 'dark')
+
+  // Suit le réglage du système quand le thème est « automatique »
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const onChange = (e) => setSystemDark(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
+  // Applique le thème à la page
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (meta) meta.setAttribute('content', theme === 'dark' ? '#0d0e12' : '#faf7f2')
+  }, [theme])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -139,6 +173,32 @@ export default function App() {
     }
   }
 
+  const goProfile = () => {
+    if (session) {
+      setView('profile')
+      clearHash()
+    } else {
+      setAfterAuth('profile')
+      setView('auth')
+    }
+  }
+
+  const goSupport = () => {
+    setView('support')
+    clearHash()
+  }
+
+  const goSettings = (section = null) => {
+    setSettingsSection(section)
+    setView('settings')
+    clearHash()
+  }
+
+  const goHelp = () => {
+    setView('help')
+    clearHash()
+  }
+
   const goLogin = () => {
     setAfterAuth('feed')
     setView('auth')
@@ -181,13 +241,17 @@ export default function App() {
             >
               {theme === 'dark' ? icons.sun : icons.moon}
             </button>
-            {session ? (
+            {!session ? (
+              <button className="link" onClick={goLogin}>
+                Connexion
+              </button>
+            ) : role === 'admin' ? (
               <button className="link" onClick={logout}>
                 Déconnexion
               </button>
             ) : (
-              <button className="link" onClick={goLogin}>
-                Connexion
+              <button className="help-btn" onClick={goHelp}>
+                <span aria-hidden="true">?</span> Aide
               </button>
             )}
           </div>
@@ -222,6 +286,13 @@ export default function App() {
                 <p className="hint">Bransh n'est pas encore active près de toi : voici {city.name}.</p>
               )}
               <Feed refreshKey={refreshKey} onOpen={openReport} city={city} />
+              <button className="card support-link" onClick={goSupport}>
+                <span>
+                  <strong>❤ Bransh est gratuite et open source</strong>
+                  <span className="muted"> · Soutenir le projet</span>
+                </span>
+                <span aria-hidden="true">→</span>
+              </button>
             </>
           )}
 
@@ -230,6 +301,33 @@ export default function App() {
               <MapView onOpen={openReport} theme={theme} center={[city.lng, city.lat]} />
             </Suspense>
           )}
+
+          {view === 'profile' && session && (
+            <Profile user={session.user} onOpenReport={openReport} onSupport={goSupport} onSettings={goSettings} onLogout={logout} />
+          )}
+
+          {view === 'settings' && (
+            <Settings
+              key={settingsSection || 'main'}
+              user={session?.user}
+              role={role}
+              themePref={themePref}
+              setThemePref={setThemePref}
+              city={city}
+              choose={choose}
+              locate={locate}
+              detecting={detecting}
+              onSupport={goSupport}
+              onHelp={goHelp}
+              onBack={() => (session ? setView('profile') : goFeed())}
+              onLogout={logout}
+              initialSection={settingsSection}
+            />
+          )}
+
+          {view === 'help' && <Help user={session?.user} onBack={() => (session ? setView('profile') : goFeed())} />}
+
+          {view === 'support' && <Support onBack={() => (session ? setView('profile') : goFeed())} />}
 
           {view === 'detail' && detailId && (
             <ReportDetail
@@ -247,12 +345,15 @@ export default function App() {
           {view === 'auth' && (
             <AuthForm
               onDone={() => setView(afterAuth)}
+              onPrivacy={() => goSettings('privacy')}
               note={
                 afterAuth === 'report'
                   ? 'Connecte-toi pour envoyer un signalement.'
                   : afterAuth === 'detail'
                     ? 'Connecte-toi pour confirmer ou contester une information.'
-                    : null
+                    : afterAuth === 'profile'
+                      ? 'Connecte-toi pour accéder à ton profil.'
+                      : null
               }
             />
           )}
@@ -281,6 +382,10 @@ export default function App() {
           <button className={view === 'report' ? 'cta active' : 'cta'} onClick={goReport}>
             {icons.plus}
             Signaler
+          </button>
+          <button className={view === 'profile' || view === 'support' || view === 'settings' ? 'active' : ''} onClick={goProfile}>
+            {icons.user}
+            Profil
           </button>
         </nav>
       </div>
